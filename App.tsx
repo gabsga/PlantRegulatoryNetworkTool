@@ -2,9 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { IntegratedInteraction, AnalysisResult, AppView, PathwayMapping, HubMapping } from './types';
 import StatsPanel from './components/StatsPanel';
-import NetworkGraph from './components/NetworkGraph';
+import NetworkVisualization from './components/NetworkVisualization';
 import PathwaySelector from './components/PathwaySelector';
-import PathwayVisualization from './components/PathwayVisualization';
 import { analyzeNetwork } from './services/geminiService';
 import { loadIntegratedData } from './services/dataLoader';
 import { PathwayData } from './services/pathwayLoader';
@@ -328,23 +327,11 @@ const App: React.FC = () => {
               </div>
             </div>
           ) : activeView === 'network' ? (
-            pathwayData ? (
-              <PathwayVisualization
-                pathwayData={pathwayData}
-                regulatoryData={filteredData}
-              />
-            ) : (
-              <NetworkGraph
-                data={filteredData.slice(0, 300)}
-                pathwayMapping={pathwayMapping}
-                hubMapping={hubMapping}
-                selectedSources={selectedSources}
-                onToggleSource={(s) => setSelectedSources(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-                graphScope={graphScope}
-                onSetGraphScope={setGraphScope}
-                pathwayData={pathwayData}
-              /> // Limit graph for performace
-            )
+            <NetworkVisualization
+              data={filteredData}
+              pathwayMapping={pathwayMapping}
+              pathwayData={pathwayData}
+            />
           ) : (
             <div className="bg-white p-12 rounded-[48px] border border-slate-100 shadow-2xl max-w-4xl mx-auto mt-10 animate-in zoom-in-95 duration-500">
               <h3 className="text-3xl font-black mb-8 text-slate-900 tracking-tight">Interpretación Funcional (AI)</h3>
