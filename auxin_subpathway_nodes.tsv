@@ -1,0 +1,20 @@
+node_id	display_name	type	auxin_role	x	y	width	height
+181	ABP1	gene	auxin_core	295	252	46	17
+110	AFB3	gene	auxin_core	467	176	46	17
+183	AHA10	gene	auxin_core	324	331	46	17
+51	ARF19	gene	auxin_core	660	176	46	17
+128	AT1G16510	gene	auxin_core	824	196	46	17
+126	AT1G23160	gene	auxin_core	824	176	46	17
+180	AT1G24650	gene	auxin_core	323	269	46	17
+DNA_auxin	DNA	compound	auxin_core	730	176	8	8
+188	HAI2	gene	auxin_core	449	325	46	17
+14	IAA	compound	auxin_core	244	175	8	8
+127	IAA10	gene	auxin_core	824	156	46	17
+49	IAA10	gene	auxin_core	564	176	46	17
+136	LAX3	gene	auxin_core	323	176	46	17
+186	MKK4	gene	auxin_core	449	280	46	17
+197	MPK6	gene	auxin_core	556	280	46	17
+187	TAR1	gene	auxin_core	449	303	46	17
+PROC_ABA_RESPONSE	Abscisic Acid Response	process	process	911	325	80	18
+PROC_AUXIN_BIOSYN	Auxin Biosynthesis	process	process	911	303	70	18
+PROC_PLANT_GROWTH	Plant Growth	process	process	911	176	60	18
