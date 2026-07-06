@@ -5,6 +5,9 @@ node_modules/
 # Build output
 dist/
 .vite/
+build_output.txt
+public/data/prebuilt/
+
 
 # Logs
 *.log

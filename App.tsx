@@ -90,7 +90,7 @@ const App: React.FC = () => {
         });
       } catch (downloadError) {
         console.error(downloadError);
-        setErrorMessage('Error exporting filtered TSV from Supabase.');
+        setErrorMessage('Error exporting filtered TSV.');
       } finally {
         setExportingTSV(false);
         setExportProgress(null);

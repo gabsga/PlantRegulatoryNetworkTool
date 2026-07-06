@@ -1,5 +1,4 @@
-import { loadIntegratedData, fetchSupabaseExploreAll, fetchSupabasePathwayMappingForGenes } from '../dataLoader';
-import { filterInteractions } from '../explorer/filterInteractions';
+import { getLocalExploreAll, loadIntegratedData } from '../dataLoader';
 
 interface ExplorerExportOptions {
   exportFormat: 'symbol' | 'geneId';
@@ -19,7 +18,7 @@ export async function exportExplorerAsTsv({
 }: ExplorerExportOptions) {
   onProgress?.('Preparing export...');
 
-  const remoteRows = await fetchSupabaseExploreAll(
+  const sourceRows = await getLocalExploreAll(
     {
       searchTerm: filters.searchTerm,
       minConfidence: filters.minConfidence,
@@ -31,25 +30,14 @@ export async function exportExplorerAsTsv({
     }
   );
 
-  let sourceRows = remoteRows;
-  let pathwayMapping: Record<string, string[]> = {};
-
-  if (remoteRows && remoteRows.length > 0) {
-    const genes = Array.from(new Set(
-      remoteRows.flatMap((row) => [row.targetId || '', row.target || '']).filter(Boolean)
-    ));
-    pathwayMapping = (await fetchSupabasePathwayMappingForGenes(genes)) || {};
-  } else {
-    // Compatibility fallback until TSV export moves server-side.
-    const dataset = await loadIntegratedData();
-    sourceRows = filterInteractions(dataset.interactions, {
-      minConfidence: filters.minConfidence,
-      priorityTfFilter: filters.priorityTfFilter,
-      searchTerm: filters.searchTerm,
-      selectedSources: filters.selectedSources
-    });
-    pathwayMapping = dataset.pathwayMapping;
-  }
+  const dataset = await loadIntegratedData();
+  const pathwayMapping = sourceRows.length > 0
+    ? Object.fromEntries(
+        Array.from(new Set(
+          sourceRows.flatMap((row) => [row.target.toUpperCase(), (row.targetId || '').toUpperCase()]).filter(Boolean)
+        )).map((gene) => [gene, dataset.pathwayMapping[gene] || []])
+      )
+    : dataset.pathwayMapping;
 
   const rows = (sourceRows || []).map((row) => {
     const sanitizeTSVCell = (value: string | number) => String(value).replace(/\t/g, ' ').replace(/\r?\n/g, ' ');

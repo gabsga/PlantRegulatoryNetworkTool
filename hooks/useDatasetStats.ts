@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DatasetStats } from '../types';
-import { fetchSupabaseStatsSummary } from '../services/dataLoader';
+import { loadDatasetManifest } from '../services/dataLoader';
 
 export function useDatasetStats(enabled: boolean) {
   const [stats, setStats] = useState<DatasetStats | undefined>(undefined);
@@ -10,15 +10,16 @@ export function useDatasetStats(enabled: boolean) {
     if (!enabled) return;
 
     let cancelled = false;
+    setError(null);
 
-    fetchSupabaseStatsSummary()
-      .then((result) => {
-        if (!cancelled && result) {
-          setStats(result);
+    loadDatasetManifest()
+      .then((manifest) => {
+        if (!cancelled) {
+          setStats(manifest.stats);
         }
       })
       .catch((loadError) => {
-        console.warn('Supabase stats unavailable during initial bootstrap.', loadError);
+        console.warn('Dataset stats unavailable during initial bootstrap.', loadError);
         if (!cancelled) {
           setError('No se pudieron cargar las estadisticas del dataset.');
         }

@@ -124,19 +124,26 @@ export const fetchSupabasePathwayMappingForGenes = async (genes: string[]) => {
   ));
   if (!config || normalizedGenes.length === 0) return null;
 
-  const query = new URLSearchParams({
-    select: 'gene_id,process',
-    order: 'gene_id.asc,process.asc'
-  });
-  query.set('gene_id', `in.(${normalizedGenes.map((gene) => `"${gene}"`).join(',')})`);
+  const chunkSize = 200;
+  const allRows: SupabaseProcessRow[] = [];
 
-  const rows = await fetchSupabaseFilteredRows<SupabaseProcessRow>(
-    config,
-    config.tables.process,
-    query.toString()
-  );
+  for (let i = 0; i < normalizedGenes.length; i += chunkSize) {
+    const chunk = normalizedGenes.slice(i, i + chunkSize);
+    const query = new URLSearchParams({
+      select: 'gene_id,process',
+      order: 'gene_id.asc,process.asc'
+    });
+    query.set('gene_id', `in.(${chunk.map((gene) => `"${gene}"`).join(',')})`);
 
-  return parsePathwayRows(rows);
+    const chunkRows = await fetchSupabaseFilteredRows<SupabaseProcessRow>(
+      config,
+      config.tables.process,
+      query.toString()
+    );
+    allRows.push(...chunkRows);
+  }
+
+  return parsePathwayRows(allRows);
 };
 
 export const fetchSupabaseGeneMappingForGenes = async (genes: string[]) => {
@@ -148,20 +155,27 @@ export const fetchSupabaseGeneMappingForGenes = async (genes: string[]) => {
   ));
   if (!config || normalizedGenes.length === 0) return null;
 
-  const query = new URLSearchParams({
-    select: 'gene_id,symbol',
-    order: 'gene_id.asc'
-  });
-  query.set('gene_id', `in.(${normalizedGenes.map((gene) => `"${gene}"`).join(',')})`);
+  const chunkSize = 200;
+  const allRows: SupabaseMappingRow[] = [];
 
-  const rows = await fetchSupabaseFilteredRows<SupabaseMappingRow>(
-    config,
-    config.tables.mapping,
-    query.toString()
-  );
+  for (let i = 0; i < normalizedGenes.length; i += chunkSize) {
+    const chunk = normalizedGenes.slice(i, i + chunkSize);
+    const query = new URLSearchParams({
+      select: 'gene_id,symbol',
+      order: 'gene_id.asc'
+    });
+    query.set('gene_id', `in.(${chunk.map((gene) => `"${gene}"`).join(',')})`);
+
+    const chunkRows = await fetchSupabaseFilteredRows<SupabaseMappingRow>(
+      config,
+      config.tables.mapping,
+      query.toString()
+    );
+    allRows.push(...chunkRows);
+  }
 
   return Object.fromEntries(
-    rows
+    allRows
       .map((row) => [String(row.gene_id || '').trim().toUpperCase(), String(row.symbol || '').trim()] as const)
       .filter(([id, symbol]) => id && symbol)
   );
@@ -176,17 +190,24 @@ export const fetchSupabaseGoAnnotationsByTerms = async (terms: string[]) => {
   ));
   if (!config || normalizedTerms.length === 0) return null;
 
-  const query = new URLSearchParams({
-    select: 'go_term,gene_id',
-    order: 'go_term.asc,gene_id.asc'
-  });
-  query.set('go_term', `in.(${normalizedTerms.map((term) => `"${term}"`).join(',')})`);
+  const chunkSize = 200;
+  const allRows: SupabaseGoRow[] = [];
 
-  const rows = await fetchSupabaseFilteredRows<SupabaseGoRow>(
-    config,
-    config.tables.go,
-    query.toString()
-  );
+  for (let i = 0; i < normalizedTerms.length; i += chunkSize) {
+    const chunk = normalizedTerms.slice(i, i + chunkSize);
+    const query = new URLSearchParams({
+      select: 'go_term,gene_id',
+      order: 'go_term.asc,gene_id.asc'
+    });
+    query.set('go_term', `in.(${chunk.map((term) => `"${term}"`).join(',')})`);
 
-  return parseGORows(rows);
+    const chunkRows = await fetchSupabaseFilteredRows<SupabaseGoRow>(
+      config,
+      config.tables.go,
+      query.toString()
+    );
+    allRows.push(...chunkRows);
+  }
+
+  return parseGORows(allRows);
 };

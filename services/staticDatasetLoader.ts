@@ -1,5 +1,4 @@
-import { GeneMapping, IntegratedInteraction, PathwayMapping, RegulationDirection } from '../types';
-import { IntegratedDataset, VALID_SOURCES, ValidSource } from './supabase/types';
+import { GeneMapping, IntegratedDataset, IntegratedInteraction, PathwayMapping, RegulationDirection, ValidSource } from '../types';
 
 interface RawInteraction {
   tf: string;
@@ -15,7 +14,17 @@ interface RawInteraction {
 const fetchText = async (url: string): Promise<string> => {
   const res = await fetch(url);
   if (!res.ok) return '';
-  return res.text();
+  const text = await res.text();
+  const trimmed = text.trimStart();
+  const lowered = trimmed.slice(0, 64).toLowerCase();
+
+  // In dev, missing static files can resolve to index.html with a 200 response.
+  // Treat obvious HTML fallbacks as "missing" so split TSV discovery can continue.
+  if (lowered.startsWith('<!doctype html') || lowered.startsWith('<html')) {
+    return '';
+  }
+
+  return text;
 };
 
 const loadDataText = async (baseName: string): Promise<string> => {

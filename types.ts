@@ -5,6 +5,9 @@ export interface InteractionMetadata {
   experimentos_neg?: string;
 }
 
+export const VALID_SOURCES = ['TARGET', 'DAP', 'CHIP'] as const;
+export type ValidSource = typeof VALID_SOURCES[number];
+
 export type RegulationDirection = 'activation' | 'repression' | 'both' | 'unknown';
 
 export interface Interaction {
@@ -29,6 +32,15 @@ export interface IntegratedInteraction {
   };
 }
 
+export interface IntegratedDataset {
+  interactions: IntegratedInteraction[];
+  geneMapping: GeneMapping;
+  pathwayMapping: PathwayMapping;
+  goAnnotations: Record<string, string[]>;
+  totalInteractions: number;
+  stats?: DatasetStats;
+}
+
 export interface DatasetStats {
   totalInteractions?: number;
   sourceCounts: {
@@ -38,6 +50,23 @@ export interface DatasetStats {
   highConfidence3: number;
   uniqueTFs: number;
   uniqueTargets: number;
+}
+
+export interface DatasetManifest {
+  generatedAt: string;
+  stats: DatasetStats;
+  statsByEvidence: Record<string, DatasetStats>;
+  tfOptions: string[];
+  interactionChunkCount?: number;
+  tfChunkIndex?: Record<string, string>;
+  tfIncomingIndex?: Record<string, string>;
+}
+
+export type TfTargetSetsByKey = Record<string, Record<string, string[]>>;
+
+export interface TfNetworkBundle {
+  direct: IntegratedInteraction[];
+  hierarchy: IntegratedInteraction[];
 }
 
 export interface DataSource {

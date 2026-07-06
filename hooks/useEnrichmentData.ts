@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchSupabaseGoAnnotationsByTerms, fetchSupabaseTfTargetSets, loadIntegratedData } from '../services/dataLoader';
+import { getLocalGoAnnotationsByTerms, getLocalTfTargetSets } from '../services/dataLoader';
 
 const GO_TERMS = [
   'Water deprivation',
@@ -23,9 +23,9 @@ export function useEnrichmentData(selectedSources: string[], minConfidence: numb
 
     const load = async () => {
       try {
-        const [remoteGoAnnotations, remoteTfTargets] = await Promise.all([
-          fetchSupabaseGoAnnotationsByTerms(GO_TERMS),
-          fetchSupabaseTfTargetSets({
+        const [localGoAnnotations, localTfTargets] = await Promise.all([
+          getLocalGoAnnotationsByTerms(GO_TERMS),
+          getLocalTfTargetSets({
             minConfidence,
             selectedSources
           })
@@ -33,56 +33,14 @@ export function useEnrichmentData(selectedSources: string[], minConfidence: numb
 
         if (cancelled) return;
 
-        if (remoteGoAnnotations && Object.keys(remoteGoAnnotations).length > 0) {
-          setGoAnnotations(remoteGoAnnotations);
-        } else {
-          // Compatibility fallback: keep enrichment functional in static/local mode.
-          const dataset = await loadIntegratedData();
-          if (!cancelled) {
-            setGoAnnotations(
-              Object.fromEntries(
-                GO_TERMS.map((term) => [term, dataset.goAnnotations[term] || []])
-              )
-            );
-          }
-        }
-
-        if (!cancelled) {
-          setTfTargets(remoteTfTargets);
-        }
+        setGoAnnotations(localGoAnnotations);
+        setTfTargets(localTfTargets);
       } catch (loadError) {
-        console.warn('Supabase enrichment data unavailable, using local dataset.', loadError);
-        try {
-          // Compatibility fallback: keep enrichment functional in static/local mode.
-          const dataset = await loadIntegratedData();
-          if (cancelled) return;
-
-          const localTfTargets = new Map<string, Set<string>>();
-          dataset.interactions.forEach((interaction) => {
-            if (interaction.evidenceCount < minConfidence) return;
-            if (!interaction.sources.some((source) => selectedSources.includes(source))) return;
-
-            const key = interaction.tf;
-            const targetId = (interaction.targetId || interaction.target || '').toUpperCase();
-            if (!targetId) return;
-            const entry = localTfTargets.get(key) || new Set<string>();
-            entry.add(targetId);
-            localTfTargets.set(key, entry);
-          });
-
-          setGoAnnotations(
-            Object.fromEntries(
-              GO_TERMS.map((term) => [term, dataset.goAnnotations[term] || []])
-            )
-          );
-          setTfTargets(localTfTargets);
-        } catch (fallbackError) {
-          console.error(fallbackError);
-          if (!cancelled) {
-            setError('Error cargando datos de enrichment.');
-            setGoAnnotations({});
-            setTfTargets(null);
-          }
+        console.error(loadError);
+        if (!cancelled) {
+          setError('Error cargando datos de enrichment.');
+          setGoAnnotations({});
+          setTfTargets(null);
         }
       } finally {
         if (!cancelled) {
